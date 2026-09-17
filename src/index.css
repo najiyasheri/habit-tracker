@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+body{
+    background-color: var(--color-zinc-900);
+    color: var(--color-zinc-100);
+}
+.small-alert {
+  width: 300px !important;
+  padding: 1rem !important;
+}
+
+.small-alert .swal2-icon {
+  width: 50px !important;
+  height: 50px !important;
+  margin: 0.5rem auto !important;
+}
+
+.small-alert .swal2-title {
+  font-size: 20px !important;
+  margin: 0.5rem 0 !important;
+}
+
+.small-alert .swal2-html-container {
+  font-size: 13px !important;
+  margin: 0.5rem 0 !important;
+}
+
+.small-alert .swal2-actions {
+  margin: 0.5rem auto 0 !important;
+}
