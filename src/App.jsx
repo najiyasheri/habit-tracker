@@ -4,6 +4,8 @@ import { HabitForm } from "./components/HabitForm";
 import { HabitList } from "./components/HabitList";
 import { Header } from "./components/Header";
 import { Dashboard } from "./components/Dashboard";
+import { Routes, Route } from "react-router-dom";
+import { Insights } from "./pages/Insights";
 function App() {
   const [habits, setHabits] = useState(() => {
     const savedHabits = localStorage.getItem("habits");
@@ -60,25 +62,34 @@ function App() {
     });
   };
   return (
-    <div className="min-h-screen bg-[url('/backgroundHabitTracker.jpg')] bg-cover bg-center bg-fixed">
-      <div className="max-w-2xl mx-auto p-4 flex flex-col gap-5">
-        {" "}
-        <Header
-          onPreviousWeek={goToPreviousWeek}
-          goToNextWeek={goToNextWeek}
-          currentDate={currentDate}
-          habits={habits}
-        />{" "}
-        <HabitForm onAddHabit={addHabit} />{" "}
-        <Dashboard habits={habits} currentDate={currentDate} />
-        <HabitList
-          habits={habits}
-          onDeleteHabit={deleteHabit}
-          onToggleHabitDate={toggleHabitDate}
-          currentDate={currentDate}
-        />{" "}
-      </div>
-    </div>
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <div className="min-h-screen bg-[url('/backgroundHabitTracker.jpg')] bg-cover bg-center bg-fixed">
+            <div className="max-w-2xl mx-auto p-4 flex flex-col gap-5">
+              {" "}
+              <Header
+                onPreviousWeek={goToPreviousWeek}
+                goToNextWeek={goToNextWeek}
+                currentDate={currentDate}
+                habits={habits}
+              />{" "}
+              <HabitForm onAddHabit={addHabit} />{" "}
+              <Dashboard habits={habits} currentDate={currentDate} />
+              <HabitList
+                habits={habits}
+                onDeleteHabit={deleteHabit}
+                onToggleHabitDate={toggleHabitDate}
+                currentDate={currentDate}
+              />{" "}
+            </div>
+          </div>
+        }
+      />
+
+      <Route path="/insights" element={<Insights habits={habits} />} />
+    </Routes>
   );
 }
 export default App;

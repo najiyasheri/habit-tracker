@@ -1,4 +1,5 @@
 import { Button } from "./Button";
+import { Link } from "react-router-dom";
 import { endOfWeek, format, startOfWeek } from "date-fns";
 export const Header = ({ onPreviousWeek, goToNextWeek ,currentDate,habits}) => {
 
@@ -22,6 +23,12 @@ const completeToday=habits.filter((habit)=>habit.completedDates.includes(today))
           {format(weekStart, "MMM d")} - {format(weekEnd, "MMM d")}
         </span>
         <div className="flex  items-center gap-2">
+          <Link
+            to="/insights"
+            className="bg-blue-400 hover:bg-blue-500 text-white rounded-lg px-4 py-2 transition-colors"
+          >
+            Insights
+          </Link>
           <Button onClick={onPreviousWeek}>←</Button>
           <Button onClick={goToNextWeek}>→</Button>
         </div>
