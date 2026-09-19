@@ -6,6 +6,7 @@ import { Header } from "./components/Header";
 import { Dashboard } from "./components/Dashboard";
 import { Routes, Route } from "react-router-dom";
 import { Insights } from "./pages/Insights";
+import Swal from "sweetalert2";
 function App() {
   const [habits, setHabits] = useState(() => {
     const savedHabits = localStorage.getItem("habits");
@@ -20,17 +21,110 @@ function App() {
   useEffect(() => {
     localStorage.setItem("habits", JSON.stringify(habits));
   }, [habits]);
-  const addHabit = (name) => {
+const addHabit = (name) => {
+  setHabits((prev) => {
+    const normalize = (text) => text.toLowerCase().replace(/\s+/g, "");
+
+    const habitName = name.trim();
+
+    // Prevent emoji/symbol-only habit names
+    if (!/[a-zA-Z0-9]/.test(habitName)) {
+      Swal.fire({
+        title: "Invalid Habit!",
+        text: "Please enter a valid habit name",
+        icon: undefined,
+        confirmButtonText: "Okay 💕",
+        confirmButtonColor: "#3b82f6",
+        background: "rgba(250, 250, 250, 1)",
+        customClass: {
+          popup: "small-alert",
+        },
+      });
+
+      return prev;
+    }
+
+    const habitExists = prev.some(
+      (habit) => normalize(habit.name) === normalize(habitName),
+    );
+
+    if (habitExists) {
+      Swal.fire({
+        title: "Already Added!",
+        text: "This habit is already on your list",
+        icon: undefined,
+        confirmButtonText: "Okay 💕",
+        confirmButtonColor: "#3b82f6",
+        background: "rgba(250, 250, 250, 1)",
+        customClass: {
+          popup: "small-alert",
+        },
+      });
+
+      return prev;
+    }
+
     const newHabit = {
       id: Date.now(),
-      name: name,
+      name: habitName,
       completedDates: [],
     };
-    setHabits((prev) => [...prev, newHabit]);
-  };
+
+    return [...prev, newHabit];
+  });
+};
   const deleteHabit = (id) => {
     setHabits((prev) => prev.filter((habits) => habits.id !== id));
   };
+const editHabit = (id, newName) => {
+  setHabits((prev) => {
+    const normalize = (text) => text.toLowerCase().replace(/\s+/g, "");
+     const habitName = name.trim();
+
+     // Prevent emoji/symbol-only habits
+     if (!/[a-zA-Z0-9]/.test(habitName)) {
+       Swal.fire({
+         title: "Invalid Habit!",
+         text: "Please enter a habit name.",
+         icon: undefined,
+         confirmButtonText: "Okay 💕",
+         confirmButtonColor: "#3b82f6",
+         background: "rgba(59, 130, 246, 0.45)",
+         customClass: {
+           popup: "small-alert",
+         },
+       });
+
+       return prev;
+     }
+
+
+    const habitExists = prev.some(
+      (habit) =>
+        habit.id !== id && normalize(habit.name) === normalize(newName),
+    );
+
+    if (habitExists) {
+      Swal.fire({
+        title: "Already Added!",
+        text: "This habit is already on your list",
+        icon: undefined,
+        confirmButtonText: "Okay 💕",
+        confirmButtonColor: "#3b82f6",
+        background: "rgba(250, 250, 250, 1.55)",
+        customClass: {
+          popup: "small-alert",
+        },
+      });
+
+      return prev;
+    }
+
+    return prev.map((habit) =>
+      habit.id === id ? { ...habit, name: newName.trim() } : habit,
+    );
+  });
+};
   const toggleHabitDate = (habitId, date) => {
     setHabits((prev) =>
       prev.map((habit) => {
@@ -80,6 +174,7 @@ function App() {
               <HabitList
                 habits={habits}
                 onDeleteHabit={deleteHabit}
+                onEditHabit={editHabit}
                 onToggleHabitDate={toggleHabitDate}
                 currentDate={currentDate}
               />{" "}

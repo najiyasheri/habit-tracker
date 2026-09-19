@@ -117,7 +117,7 @@ export const Insights = ({ habits = [] }) => {
   });
   return (
     <div className="min-h-screen bg-[url('/backgroundHabitTracker.jpg')] bg-cover bg-center bg-fixed">
-      <div className="max-w-5xl mx-auto p-4 sm:p-6">
+      <div className="max-w-5xl mx-auto p-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -185,7 +185,7 @@ export const Insights = ({ habits = [] }) => {
             <p className="text-xs text-zinc-400 mt-1">of your last 30 days</p>
           </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-3 items-stretch">
           {/* Activity */}
           <div className="relative z-10 rounded-xl bg-zinc-800/70 backdrop-blur-sm border border-white/10 p-5">
             <h2 className="text-xl font-bold text-white">30-Day Activity</h2>
@@ -217,7 +217,7 @@ export const Insights = ({ habits = [] }) => {
             </div>
           </div>
           {/* Habit Progress */}
-          <div className="rounded-xl bg-zinc-800/70 backdrop-blur-sm border border-white/10 p-5">
+          <div className="h-full rounded-xl bg-zinc-800/70 backdrop-blur-sm border border-white/10 p-5">
             <h2 className="text-xl font-bold text-white">Habit Progress</h2>
 
             <p className="text-sm text-zinc-400 mt-1">
@@ -246,9 +246,9 @@ export const Insights = ({ habits = [] }) => {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-3 items-stretch">
           {/* Habit Journey */}
-          <div className="rounded-xl bg-zinc-800/70 backdrop-blur-sm border border-white/10 p-5">
+          <div className="h-full rounded-xl bg-zinc-800/70 backdrop-blur-sm border border-white/10 p-5">
             <h2 className="text-xl font-bold text-white">Habit Journey </h2>
 
             <p className="text-sm text-zinc-400 mt-1">
@@ -281,8 +281,8 @@ export const Insights = ({ habits = [] }) => {
           </div>
 
           {/* Patterns */}
-          {/* Patterns */}
-          <div className="rounded-xl bg-zinc-800/70 backdrop-blur-sm border border-white/10 p-5 mt-4">
+
+          <div className="h-full rounded-xl bg-zinc-800/70 backdrop-blur-sm border border-white/10 p-5">
             <h2 className="text-xl font-bold text-white"> Your Patterns</h2>
 
             <div className="mt-5 flex flex-wrap gap-x-8 gap-y-4 text-sm">

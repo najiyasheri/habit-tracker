@@ -13,19 +13,20 @@ import { useEffect, useState } from "react";
 export const HabitList = ({
   habits,
   onDeleteHabit,
+  onEditHabit,
   onToggleHabitDate,
-  currentDate
+  currentDate,
 }) => {
-  const habitPerPages=2
-  const [currentPage,setCurrentPage]=useState(1)
-  const totalPages=Math.ceil(habits.length/habitPerPages)
+  const habitPerPages = 2;
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(habits.length / habitPerPages);
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(totalPages);
     }
   }, [currentPage, totalPages]);
-  const startIndex=(currentPage-1)*habitPerPages
-  const visibleHabits=habits.slice(startIndex,startIndex+habitPerPages)
+  const startIndex = (currentPage - 1) * habitPerPages;
+  const visibleHabits = habits.slice(startIndex, startIndex + habitPerPages);
   if (habits.length === 0) {
     return (
       <p className="text-center text text-zinc-500 py-12">
@@ -43,6 +44,7 @@ export const HabitList = ({
           onDeleteHabit={onDeleteHabit}
           onToggleHabitDate={onToggleHabitDate}
           currentDate={currentDate}
+          onEditHabit={onEditHabit}
         />
       ))}
       {totalPages > 1 && (
@@ -60,14 +62,16 @@ export const HabitList = ({
           <Button
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((prev) => prev + 1)}
-          >Next</Button>
+          >
+            Next
+          </Button>
         </div>
       )}
     </div>
   );
 };
 
-function HabitItem({ habit, onDeleteHabit, onToggleHabitDate,currentDate }) {
+function HabitItem({ habit, onDeleteHabit,onEditHabit, onToggleHabitDate,currentDate }) {
   const calculateStreak=()=>{
   if(habit.completedDates.length===0) return 0
 
@@ -89,6 +93,15 @@ function HabitItem({ habit, onDeleteHabit, onToggleHabitDate,currentDate }) {
   }
   return streak
   }
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(habit.name);
+
+  const handleEdit = () => {
+    if (editName.trim() === "") return;
+
+    onEditHabit(habit.id, editName);
+    setIsEditing(false);
+  };
   const visibleDates = eachDayOfInterval({
     start: startOfWeek(currentDate, { weekStartsOn: 1 }),
     end: endOfWeek(currentDate, { weekStartsOn: 1 }),
@@ -104,7 +117,7 @@ function HabitItem({ habit, onDeleteHabit, onToggleHabitDate,currentDate }) {
       confirmButtonColor: "#dc2626",
       cancelButtonColor: "#6b7280",
 
-      background: "rgba(200, 200, 200, 0.55)",
+      background: "rgba(250, 250, 250, 1)",
       customClass: {
         popup: "small-alert",
       },
@@ -117,21 +130,64 @@ function HabitItem({ habit, onDeleteHabit, onToggleHabitDate,currentDate }) {
 
   return (
     <div className="rounded-xl bg-zinc-800/70 backdrop-blur-sm p-4 flex flex-col gap-3 border border-white/10">
-      <div className="flex items-center justify-between">
-        <div className="flex gap-3 items-center">
-          <span className="font-medium text-white">{habit.name}</span>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex gap-3 items-center min-w-0">
+          {isEditing ? (
+            <input
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className="min-w-0 flex-1 rounded-lg bg-zinc-700 px-3 py-1.5 text-white outline-none border border-white/10 focus-visible:ring-2 focus-visible:ring-blue-500"
+              autoFocus
+            />
+          ) : (
+            <span className="font-medium text-white">{habit.name}</span>
+          )}
+
           <span className="text-sm text-amber-400 bg-amber-400/10 px-2 py-1 rounded-full">
-            {" "}
             🔥 {calculateStreak()}
           </span>
         </div>
-        <Button
-          className="text-xs px-3 py-1.5"
-          variant="danger"
-          onClick={handleDelete}
-        >
-          Delete
-        </Button>
+
+        <div className="flex gap-2 shrink-0">
+          {isEditing ? (
+            <>
+              <Button
+                className="text-xs px-3 py-1.5"
+                onClick={handleEdit}
+                disabled={editName.trim() === ""}
+              >
+                Save
+              </Button>
+
+              <Button
+                className="text-xs px-3 py-1.5"
+                onClick={() => {
+                  setEditName(habit.name);
+                  setIsEditing(false);
+                }}
+              >
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                className="text-xs px-3 py-1.5"
+                onClick={() => setIsEditing(true)}
+              >
+                Edit
+              </Button>
+
+              <Button
+                className="text-xs px-3 py-1.5"
+                variant="danger"
+                onClick={handleDelete}
+              >
+                Delete
+              </Button>
+            </>
+          )}
+        </div>
       </div>
       <div className="flex gap-1.5 overflow-x-auto pb-1">
         {visibleDates.map((date) => {
@@ -143,7 +199,10 @@ function HabitItem({ habit, onDeleteHabit, onToggleHabitDate,currentDate }) {
                 isCompleted ? "bg-green-500 hover:bg-green-600 text-white" : ""
               }`}
               key={date.toISOString()}
-              disabled={isBefore(startOfDay(date),startOfDay(new Date()))||isFuture(date)}
+              disabled={
+                isBefore(startOfDay(date), startOfDay(new Date())) ||
+                isFuture(date)
+              }
               onClick={() => onToggleHabitDate(habit.id, dateString)}
             >
               <span className="font-medium">{format(date, "EEE")}</span>
