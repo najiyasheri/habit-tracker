@@ -7,22 +7,41 @@ import { Dashboard } from "./components/Dashboard";
 import { Routes, Route } from "react-router-dom";
 import { Insights } from "./pages/Insights";
 import Swal from "sweetalert2";
-function App() {
-  const [habits, setHabits] = useState(() => {
-    const savedHabits = localStorage.getItem("habits");
-    if (!savedHabits) return [];
+import { supabase } from "./supabaseClient";
 
-    return JSON.parse(savedHabits).map((habit) => ({
-      ...habit,
-      completedDates: habit.completedDates || [],
-    }));
-  });
+function App() {
+  const [habits, setHabits] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
+
+  // Load habits from Supabase
   useEffect(() => {
-    localStorage.setItem("habits", JSON.stringify(habits));
-  }, [habits]);
-const addHabit = (name) => {
-  setHabits((prev) => {
+    const getHabits = async () => {
+      const { data, error } = await supabase
+        .from("habits")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching habits:", error);
+        setLoading(false);
+        return;
+      }
+
+      const formattedHabits = data.map((habit) => ({
+        id: habit.id,
+        name: habit.name,
+        completedDates: habit.completed_dates || [],
+      }));
+
+      setHabits(formattedHabits);
+      setLoading(false);
+    };
+
+    getHabits();
+  }, []);
+
+  const addHabit = async (name) => {
     const normalize = (text) => text.toLowerCase().replace(/\s+/g, "");
 
     const habitName = name.trim();
@@ -41,10 +60,11 @@ const addHabit = (name) => {
         },
       });
 
-      return prev;
+      return;
     }
 
-    const habitExists = prev.some(
+    // Check for duplicate
+    const habitExists = habits.some(
       (habit) => normalize(habit.name) === normalize(habitName),
     );
 
@@ -61,47 +81,69 @@ const addHabit = (name) => {
         },
       });
 
-      return prev;
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("habits")
+      .insert({
+        name: habitName,
+        completed_dates: [],
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error adding habit:", error);
+      return;
     }
 
     const newHabit = {
-      id: Date.now(),
-      name: habitName,
-      completedDates: [],
+      id: data.id,
+      name: data.name,
+      completedDates: data.completed_dates || [],
     };
 
-    return [...prev, newHabit];
-  });
-};
-  const deleteHabit = (id) => {
-    setHabits((prev) => prev.filter((habits) => habits.id !== id));
+    setHabits((prev) => [...prev, newHabit]);
   };
-const editHabit = (id, newName) => {
-  setHabits((prev) => {
+
+  const deleteHabit = async (id) => {
+    const { error } = await supabase.from("habits").delete().eq("id", id);
+
+    if (error) {
+      console.error("Error deleting habit:", error);
+      return;
+    }
+
+    setHabits((prev) => prev.filter((habit) => habit.id !== id));
+  };
+
+  const editHabit = async (id, newName) => {
     const normalize = (text) => text.toLowerCase().replace(/\s+/g, "");
-     const habitName = name.trim();
 
-     // Prevent emoji/symbol-only habits
-     if (!/[a-zA-Z0-9]/.test(habitName)) {
-       Swal.fire({
-         title: "Invalid Habit!",
-         text: "Please enter a habit name.",
-         icon: undefined,
-         confirmButtonText: "Okay 💕",
-         confirmButtonColor: "#3b82f6",
-         background: "rgba(59, 130, 246, 0.45)",
-         customClass: {
-           popup: "small-alert",
-         },
-       });
+    const habitName = newName.trim();
 
-       return prev;
-     }
+    // Prevent emoji/symbol-only habit names
+    if (!/[a-zA-Z0-9]/.test(habitName)) {
+      Swal.fire({
+        title: "Invalid Habit!",
+        text: "Please enter a habit name.",
+        icon: undefined,
+        confirmButtonText: "Okay 💕",
+        confirmButtonColor: "#3b82f6",
+        background: "rgba(250, 250, 250, 1)",
+        customClass: {
+          popup: "small-alert",
+        },
+      });
 
+      return;
+    }
 
-    const habitExists = prev.some(
+    // Prevent duplicate habits
+    const habitExists = habits.some(
       (habit) =>
-        habit.id !== id && normalize(habit.name) === normalize(newName),
+        habit.id !== id && normalize(habit.name) === normalize(habitName),
     );
 
     if (habitExists) {
@@ -111,36 +153,65 @@ const editHabit = (id, newName) => {
         icon: undefined,
         confirmButtonText: "Okay 💕",
         confirmButtonColor: "#3b82f6",
-        background: "rgba(250, 250, 250, 1.55)",
+        background: "rgba(250, 250, 250, 1)",
         customClass: {
           popup: "small-alert",
         },
       });
 
-      return prev;
+      return;
     }
 
-    return prev.map((habit) =>
-      habit.id === id ? { ...habit, name: newName.trim() } : habit,
-    );
-  });
-};
-  const toggleHabitDate = (habitId, date) => {
+    const { error } = await supabase
+      .from("habits")
+      .update({ name: habitName })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error editing habit:", error);
+      return;
+    }
+
     setHabits((prev) =>
-      prev.map((habit) => {
-        if (habit.id !== habitId) return habit;
-
-        const completedDates = habit.completedDates.includes(date)
-          ? habit.completedDates.filter((d) => d !== date)
-          : [...habit.completedDates, date];
-
-        return {
-          ...habit,
-          completedDates,
-        };
-      }),
+      prev.map((habit) =>
+        habit.id === id ? { ...habit, name: habitName } : habit,
+      ),
     );
   };
+
+  const toggleHabitDate = async (habitId, date) => {
+    const habit = habits.find((habit) => habit.id === habitId);
+
+    if (!habit) return;
+
+    const completedDates = habit.completedDates.includes(date)
+      ? habit.completedDates.filter((d) => d !== date)
+      : [...habit.completedDates, date];
+
+    const { error } = await supabase
+      .from("habits")
+      .update({
+        completed_dates: completedDates,
+      })
+      .eq("id", habitId);
+
+    if (error) {
+      console.error("Error updating habit:", error);
+      return;
+    }
+
+    setHabits((prev) =>
+      prev.map((habit) =>
+        habit.id === habitId
+          ? {
+              ...habit,
+              completedDates,
+            }
+          : habit,
+      ),
+    );
+  };
+
   const goToPreviousWeek = () => {
     setCurrentDate((prev) => {
       const date = new Date(prev);
@@ -148,6 +219,7 @@ const editHabit = (id, newName) => {
       return date;
     });
   };
+
   const goToNextWeek = () => {
     setCurrentDate((next) => {
       const date = new Date(next);
@@ -155,29 +227,38 @@ const editHabit = (id, newName) => {
       return date;
     });
   };
+if (loading) {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <p>Loading habits...</p>
+    </div>
+  );
+}
   return (
     <Routes>
       <Route
         path="/"
         element={
-          <div className="min-h-screen bg-[url('/backgroundHabitTracker.jpg')] bg-cover bg-center bg-fixed">
+          <div className="min-h-screen bg-[url('/backgroundHabitTracker.jpg')] bg-cover bg-center">
             <div className="max-w-2xl mx-auto p-4 flex flex-col gap-5">
-              {" "}
               <Header
                 onPreviousWeek={goToPreviousWeek}
                 goToNextWeek={goToNextWeek}
                 currentDate={currentDate}
                 habits={habits}
-              />{" "}
-              <HabitForm onAddHabit={addHabit} />{" "}
+              />
+
+              <HabitForm onAddHabit={addHabit} />
+
               <Dashboard habits={habits} currentDate={currentDate} />
+
               <HabitList
                 habits={habits}
                 onDeleteHabit={deleteHabit}
                 onEditHabit={editHabit}
                 onToggleHabitDate={toggleHabitDate}
                 currentDate={currentDate}
-              />{" "}
+              />
             </div>
           </div>
         }
@@ -187,4 +268,5 @@ const editHabit = (id, newName) => {
     </Routes>
   );
 }
+
 export default App;

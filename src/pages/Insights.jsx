@@ -308,3 +308,4 @@ export const Insights = ({ habits = [] }) => {
     </div>
   );
 };
+export default Insights;
