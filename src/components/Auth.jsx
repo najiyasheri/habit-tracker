@@ -117,14 +117,14 @@ export function Auth() {
         if (data.session) {
           await supabase.auth.signOut();
         }
-Swal.fire({
-  title: "Account Created!",
-  text: "Your account was created successfully. Please log in.",
-  confirmButtonText: "Okay 💕",
-  confirmButtonColor: "#3b82f6",
-  background: "rgba(250, 250, 250, 1)",
-  customClass: { popup: "small-alert" },
-});
+        Swal.fire({
+          title: "Account Created!",
+          text: "Your account was created successfully. Please log in.",
+          confirmButtonText: "Okay 💕",
+          confirmButtonColor: "#3b82f6",
+          background: "rgba(250, 250, 250, 1)",
+          customClass: { popup: "small-alert" },
+        });
 
         setIsLogin(true);
         setPassword("");

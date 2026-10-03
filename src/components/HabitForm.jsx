@@ -1,15 +1,14 @@
 import { useState } from "react";
 import { Button } from "./Button";
 
-export const HabitForm = ({onAddHabit}) => {
+export const HabitForm = ({ onAddHabit }) => {
   const [name, setName] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (name.trim() === "") return;
-    onAddHabit(name.trim())
-    setName('')
-    
+    onAddHabit(name.trim());
+    setName("");
   };
   return (
     <form className="flex flex-col sm:flex-row gap-2" onSubmit={handleSubmit}>
