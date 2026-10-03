@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../supabaseClient";
 import { Eye, EyeOff } from "lucide-react";
+import Swal from "sweetalert2";
 export function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -16,7 +17,7 @@ export function Auth() {
     const cleanEmail = email.trim();
 
     // Check email
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!cleanEmail) {
       return "Please enter your email address.";
@@ -59,7 +60,24 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     return "";
   }
+  async function handleGoogleLogin() {
+    setLoading(true);
+    setMessage("");
+    setMessageType("");
 
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      setMessage(error.message);
+      setMessageType("error");
+      setLoading(false);
+    }
+  }
   async function handleSubmit(e) {
     e.preventDefault();
     setMessage("");
@@ -97,13 +115,18 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (error) throw error;
 
         if (data.session) {
-          const { error: signOutError } = await supabase.auth.signOut();
-          if (signOutError) throw signOutError;
+          await supabase.auth.signOut();
         }
+Swal.fire({
+  title: "Account Created!",
+  text: "Your account was created successfully. Please log in.",
+  confirmButtonText: "Okay 💕",
+  confirmButtonColor: "#3b82f6",
+  background: "rgba(250, 250, 250, 1)",
+  customClass: { popup: "small-alert" },
+});
 
         setIsLogin(true);
-        setMessage("Account created! Please log in.");
-        setMessageType("success");
         setPassword("");
         setConfirmPassword("");
         setShowPassword(false);
@@ -121,7 +144,9 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         errorMessage.includes("user already registered") ||
         errorMessage.includes("already been registered")
       ) {
-        setMessage("An account with this email already exists. Please log in.");
+        setIsLogin(true);
+        setMessage("This email is already registered. Please log in.");
+        setMessageType("error");
       } else if (errorMessage.includes("email not confirmed")) {
         setMessage("Please confirm your email before logging in.");
       } else if (errorMessage.includes("password")) {
@@ -268,7 +293,7 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           disabled={loading}
           className="w-full rounded-lg bg-blue-400 hover:bg-blue-500 px-4 py-2 font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loading ? "Please wait..." : isLogin ? "Log in" : "Sign up"}
+          {loading ? "Creating account..." : isLogin ? "Log in" : "Sign up"}
         </button>
 
         <p className="mt-5 text-center text-sm text-gray-600">
@@ -281,6 +306,25 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             {isLogin ? "Sign up" : "Log in"}
           </button>
         </p>
+        <div className="my-4 flex items-center gap-3">
+          <div className="h-px flex-1 bg-gray-300"></div>
+          <span className="text-xs text-gray-500">OR</span>
+          <div className="h-px flex-1 bg-gray-300"></div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={loading}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt="Google"
+            className="h-5 w-5"
+          />
+          Continue with Google
+        </button>
       </form>
     </main>
   );
